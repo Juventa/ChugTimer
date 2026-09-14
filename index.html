@@ -1,0 +1,287 @@
+<title>Chug Timer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#EEF1EF;
+    --surface:#FFFFFF;
+    --surface-2:#E4E8E5;
+    --ink:#14181A;
+    --ink-soft:#4E5B54;
+    --ink-faint:#8A968E;
+    --line:#D8DED9;
+    --red:#E0392A; --red-ink:#FFFFFF; --red-soft:#FBE2DF;
+    --orange:#D97C1F; --orange-ink:#FFFFFF; --orange-soft:#FAEAD4;
+    --green:#1FA05D; --green-ink:#FFFFFF; --green-soft:#DCF0E4;
+    --blue:#2E7FD6; --blue-ink:#FFFFFF; --blue-soft:#DDEAFA;
+    --shadow: 0 1px 2px rgba(20,24,26,0.05), 0 8px 24px -12px rgba(20,24,26,0.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171A; --surface:#1D2126; --surface-2:#262B31;
+      --ink:#ECEFF1; --ink-soft:#9AA5AD; --ink-faint:#5C666D; --line:#2E343A;
+      --red:#FF5847; --red-ink:#3A0A05; --red-soft:#3B1712;
+      --orange:#FFA94D; --orange-ink:#3A2205; --orange-soft:#3A2712;
+      --green:#3EDB8A; --green-ink:#04331A; --green-soft:#123526;
+      --blue:#5FAEFF; --blue-ink:#04203D; --blue-soft:#152B40;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 30px -14px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171A; --surface:#1D2126; --surface-2:#262B31;
+    --ink:#ECEFF1; --ink-soft:#9AA5AD; --ink-faint:#5C666D; --line:#2E343A;
+    --red:#FF5847; --red-ink:#3A0A05; --red-soft:#3B1712;
+    --orange:#FFA94D; --orange-ink:#3A2205; --orange-soft:#3A2712;
+    --green:#3EDB8A; --green-ink:#04331A; --green-soft:#123526;
+    --blue:#5FAEFF; --blue-ink:#04203D; --blue-soft:#152B40;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 30px -14px rgba(0,0,0,0.6);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Sora", system-ui, -apple-system, sans-serif;
+    padding-inline: 16px; padding-block: 28px 60px;
+  }
+  .mono{ font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .wrap{ max-width:420px; margin:0 auto; display:flex; flex-direction:column; gap:18px; }
+
+  header{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand .mark{ width:26px; height:26px; flex:none; }
+  .brand .name{ font-weight:700; font-size:17px; letter-spacing:-0.01em; }
+
+  .connbtn{
+    font-family:"Sora",sans-serif; font-weight:600; font-size:13.5px;
+    padding:9px 14px; border-radius:20px; border:1px solid var(--line);
+    background:var(--surface); color:var(--ink); cursor:pointer;
+    display:flex; align-items:center; gap:7px;
+  }
+  .connbtn .dot{ width:7px; height:7px; border-radius:50%; background:var(--ink-faint); flex:none; }
+  .connbtn.connected{ background:var(--blue-soft); border-color:transparent; color:var(--blue); }
+  .connbtn.connected .dot{ background:var(--blue); }
+  .connbtn:active{ transform:scale(0.97); }
+
+  .stage{
+    background:var(--surface); border-radius:20px; box-shadow:var(--shadow);
+    padding:32px 24px; display:flex; flex-direction:column; align-items:center; gap:6px;
+    border:1px solid var(--line);
+    transition: background 0.25s ease, border-color 0.25s ease;
+  }
+  .stage.state-1{ background:var(--red-soft); border-color:transparent; }
+  .stage.state-2{ background:var(--orange-soft); border-color:transparent; }
+  .stage.state-3{ background:var(--green-soft); border-color:transparent; }
+
+  .statelabel{
+    font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--ink-faint);
+  }
+  .stage.state-1 .statelabel{ color:var(--red); }
+  .stage.state-2 .statelabel{ color:var(--orange); }
+  .stage.state-3 .statelabel{ color:var(--green); }
+
+  .bigtime{
+    font-size:56px; font-weight:700; line-height:1; margin:10px 0 4px;
+    font-variant-numeric: tabular-nums; letter-spacing:-0.02em;
+  }
+  .stage.state-1 .bigtime{ color:var(--red); }
+  .stage.state-2 .bigtime{ color:var(--orange); }
+  .stage.state-3 .bigtime{ color:var(--green); }
+
+  .hint{ font-size:13.5px; color:var(--ink-soft); text-align:center; max-width:26ch; }
+
+  .section-label{
+    font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em;
+    color:var(--ink-faint); margin: 4px 2px 0;
+  }
+
+  .rounds{ display:flex; flex-direction:column; gap:1px; background:var(--line); border-radius:14px; overflow:hidden; border:1px solid var(--line); }
+  .round-row{ background:var(--surface); padding:11px 14px; display:flex; align-items:center; justify-content:space-between; }
+  .round-row .n{ font-size:13px; color:var(--ink-faint); }
+  .round-row .t{ font-weight:600; font-size:15px; }
+  .empty{ background:var(--surface); padding:22px 14px; text-align:center; color:var(--ink-faint); font-size:13.5px; border-radius:14px; border:1px solid var(--line); }
+
+  details.tech{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:2px 14px; }
+  details.tech summary{ padding:11px 0; font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; }
+  details.tech summary::-webkit-details-marker{ display:none; }
+  .tech-row{ display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-top:1px solid var(--line); font-size:12.5px; }
+  .tech-row .k{ color:var(--ink-faint); }
+  .tech-row .v{ color:var(--ink-soft); word-break:break-all; text-align:right; }
+
+  .unsupported{ background:var(--orange-soft); border:1px solid transparent; border-radius:14px; padding:14px 16px; font-size:13.5px; color:var(--ink); }
+  .unsupported b{ color:var(--orange); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" stroke="var(--ink)" stroke-width="1.6"/>
+        <path d="M9 8.5V12L12 14" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="name">Chug Timer</div>
+    </div>
+    <button class="connbtn" id="connBtn"><span class="dot"></span><span id="connLabel">Connect</span></button>
+  </header>
+
+  <div class="stage" id="stage">
+    <div class="statelabel" id="stateLabel">Not connected</div>
+    <div class="bigtime mono" id="bigTime">--.--</div>
+    <div class="hint" id="hint">Connect to your ChugTimer device to see live status.</div>
+  </div>
+
+  <div class="section-label">Rounds this session</div>
+  <div id="roundsWrap">
+    <div class="empty" id="roundsEmpty">No rounds yet — they'll show up here as they finish.</div>
+  </div>
+
+  <details class="tech">
+    <summary>Device details</summary>
+    <div class="tech-row"><span class="k">Device name</span><span class="v mono" id="techName">—</span></div>
+    <div class="tech-row"><span class="k">Service UUID</span><span class="v mono">4fafc201-1fb5-459e-8fcc-c5c9c331914b</span></div>
+    <div class="tech-row"><span class="k">Last packet</span><span class="v mono" id="techPacket">—</span></div>
+  </details>
+
+  <div class="unsupported" id="unsupportedBox" hidden>
+    <b>Web Bluetooth isn't available in this browser.</b> Open this page in <b>Chrome</b> or <b>Edge on Android</b> — Web Bluetooth doesn't work in Safari, Firefox, or in-app browsers (like opening a link from a chat app).
+  </div>
+</div>
+
+<script>
+(function(){
+  var SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
+  var CHAR_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
+
+  var connBtn = document.getElementById('connBtn');
+  var connLabel = document.getElementById('connLabel');
+  var stage = document.getElementById('stage');
+  var stateLabel = document.getElementById('stateLabel');
+  var bigTime = document.getElementById('bigTime');
+  var hint = document.getElementById('hint');
+  var roundsWrap = document.getElementById('roundsWrap');
+  var roundsEmpty = document.getElementById('roundsEmpty');
+  var techName = document.getElementById('techName');
+  var techPacket = document.getElementById('techPacket');
+  var unsupportedBox = document.getElementById('unsupportedBox');
+
+  var device = null;
+  var characteristic = null;
+  var rounds = [];
+  var lastDoneMs = null;
+
+  var STATE_META = {
+    0: { label: 'Not connected', cls: '' },
+    1: { label: 'Ready — lift the glass', cls: 'state-1' },
+    2: { label: 'Timing', cls: 'state-2' },
+    3: { label: 'Glass returned', cls: 'state-3' }
+  };
+
+  try {
+    var saved = localStorage.getItem('chugtimer_rounds');
+    if (saved) { rounds = JSON.parse(saved); renderRounds(); }
+  } catch(e) {}
+
+  function fmtTime(ms) {
+    return (ms / 1000).toFixed(2);
+  }
+
+  function renderRounds() {
+    if (rounds.length === 0) {
+      roundsWrap.innerHTML = '';
+      roundsWrap.appendChild(roundsEmpty);
+      return;
+    }
+    var html = '<div class="rounds">';
+    for (var i = rounds.length - 1; i >= 0; i--) {
+      html += '<div class="round-row"><span class="n">Round ' + (i+1) + '</span><span class="t mono">' + fmtTime(rounds[i]) + ' s</span></div>';
+    }
+    html += '</div>';
+    roundsWrap.innerHTML = html;
+  }
+
+  function applyState(stateByte, elapsedMs) {
+    var meta = STATE_META[stateByte] || STATE_META[0];
+    stage.className = 'stage' + (meta.cls ? ' ' + meta.cls : '');
+    stateLabel.textContent = meta.label;
+
+    if (stateByte === 1) {
+      bigTime.textContent = '0.00';
+      hint.textContent = 'Full glass placed. Lift it to start timing.';
+    } else if (stateByte === 2) {
+      bigTime.textContent = fmtTime(elapsedMs);
+      hint.textContent = 'Chugging in progress...';
+    } else if (stateByte === 3) {
+      bigTime.textContent = fmtTime(elapsedMs);
+      hint.textContent = 'Nice. Press the device button to start the next round.';
+      if (lastDoneMs !== elapsedMs) {
+        lastDoneMs = elapsedMs;
+        rounds.push(elapsedMs);
+        try { localStorage.setItem('chugtimer_rounds', JSON.stringify(rounds)); } catch(e) {}
+        renderRounds();
+      }
+    } else {
+      bigTime.textContent = '--.--';
+      hint.textContent = device ? 'Waiting for the device to arm...' : 'Connect to your ChugTimer device to see live status.';
+    }
+  }
+
+  function onNotify(event) {
+    var v = event.target.value;
+    var stateByte = v.getUint8(0);
+    var elapsedMs = v.getUint32(1, true);
+    techPacket.textContent = 'state ' + stateByte + ', ' + elapsedMs + ' ms';
+    applyState(stateByte, elapsedMs);
+  }
+
+  function onDisconnected() {
+    connBtn.classList.remove('connected');
+    connLabel.textContent = 'Connect';
+    techName.textContent = '—';
+    applyState(0, 0);
+    device = null;
+    characteristic = null;
+  }
+
+  async function connect() {
+    try {
+      device = await navigator.bluetooth.requestDevice({
+        filters: [{ services: [SERVICE_UUID] }]
+      });
+      techName.textContent = device.name || '(unnamed)';
+      device.addEventListener('gattserverdisconnected', onDisconnected);
+
+      var server = await device.gatt.connect();
+      var service = await server.getPrimaryService(SERVICE_UUID);
+      characteristic = await service.getCharacteristic(CHAR_UUID);
+      await characteristic.startNotifications();
+      characteristic.addEventListener('characteristicvaluechanged', onNotify);
+
+      connBtn.classList.add('connected');
+      connLabel.textContent = 'Connected';
+      applyState(0, 0);
+      hint.textContent = 'Connected. Waiting for the device to arm...';
+    } catch (err) {
+      if (err && err.name !== 'NotFoundError') {
+        hint.textContent = 'Connection failed: ' + err.message;
+      }
+    }
+  }
+
+  connBtn.addEventListener('click', function(){
+    if (device && device.gatt.connected) {
+      device.gatt.disconnect();
+      onDisconnected();
+    } else {
+      connect();
+    }
+  });
+
+  if (!navigator.bluetooth) {
+    unsupportedBox.hidden = false;
+    connBtn.disabled = true;
+    connBtn.style.opacity = '0.5';
+  }
+})();
+</script>
